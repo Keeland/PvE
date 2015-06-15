@@ -1,0 +1,39 @@
+on rightclick on sign:
+	line 1 is "&9[&4&lPvE&9]"
+	line 2 is "&6&o&nJoin!"
+	if {mz.joined.total} is 36:
+		message "&cThis game Is full "
+	if player has permission "sk.pvez":
+		set line 3 to "%{mz.joined.total}%/36"
+		run player command "/pvez join" as op
+	else:
+		message "&cAlpha Testing - &bOnly for Donators"
+		
+on rightclick on sign:
+	line 1 is "&9[&4&lPvE&9]"
+	line 2 is "start"
+	run player command "/pve start" as op
+
+on rightclick on sign:
+	line 1 is "&9[&4&lPvE&9]"
+	line 2 is "leave"
+	run player command "/pve leave" as op
+
+on rightclick on sign:
+	line 1 is "&9[&4&lPvE&9]"
+	line 2 is "Recipes"
+	give player 1 book named "Recipes"
+	
+on sign change:
+	line 1 of event-block is "[PvE]"
+	if player has permission "reward.sign":
+		send "<aqua>You have created a PvE Sign!" to player
+		set line 1 of event-block to "&9[&4&lPvE&9]"
+		if line 2 of event-block is "join":
+			set line 2 of event-block to "&6&o&nJoin!"
+			set line 3 of event-block to "0/36"
+			set {mz.joined.total} to 0
+			set {mz.signlocation} to location of event-block
+	else:
+		send "<red>You do not have permission to create reward signs!" to player
+		cancel event

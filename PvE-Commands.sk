@@ -1,0 +1,820 @@
+options:
+	MZ-Logo: &9&l[&4&l&oPvE&9&l] <reset>
+
+
+
+
+
+
+
+
+	# ----- Utility----- #
+
+
+
+
+
+command /pvez [<text="help">] [<text="1 mc day">]:
+	permission: pvez.%arg 1%
+	description: Base user command for PvE
+	executable by: players
+	aliases: /pve
+	trigger:
+		if arg 1 is "h" or "help":
+			message "&e[---------------[&4PvE Help&e]---------------]"
+			message "&6/pve setlobby &a- sets lobby points"
+			message "&6/pve spawnpoint &a- sets spawn points"
+			message "&6/pve leave &a- Leave The PvE Lobby"
+			message "&6/pve join &a- Join PvE Lobby"
+			message "&6/pve logout &a- Allows the player to SAFELY log out and save."
+			message "&6/pve menu &a- To Open Recipe GUI - (just added)"
+			message "&a - To Join Game Click Sigh with &9[PvE] &aJoin ."
+		if arg 1 is "sl" or "setlobby":
+			set {lobby.pvez} to location of player
+			message "{@MZ-Logo}&aLobby spawn set!"
+			stop
+		if arg 1 is "sp" or "spawnpoint":
+			set {spawn.pvez} to location of player
+			message "{@MZ-Logo}&aSpawn Point set!"
+			stop
+		if arg 1 is "l" or "leave":
+			message "{@MZ-Logo}&aLeaving PvE Game!"
+			set {pvez.%player%.join} to 0
+			clear player's inventory
+			remove 1 from {mz.joined.total}
+			teleport player to {back.%player%.pvez}
+			set line 3 of block at {mz.signlocation} to "%{mz.joined.total}%/36"
+		if arg 1 is "j" or "join":
+			player has permission "pvez.join":
+				set variable {back.%player%.pvez} to location of player
+				wait 1 tick
+				give 9216 block 36 to player
+				loop items in player's inventory:
+					add loop-item to {pvezinv.%player%::*}
+				set {pvezinv.%player%::h} to player's helmet
+				set {pvezinv.%player%::c} to player's chestplate
+				set {pvezinv.%player%::l} to player's leggings
+				set {pvezinv.%player%::b} to player's boots
+				clear player's inventory
+				teleport player to {lobby.pvez}
+				add player to {pvez.playerlist::*}
+				add 1 to {mz.joined.total}
+				wait 3 ticks
+				clear player's inventory
+				wait 3 ticks
+				give 1 paper named "&6Version &3&l| &2&l0.9.6&6-&CAlpha" with lore "&cAlliance PvE||&cPre-Alpha Testing||&cDeveloped By &9Keelan" to player
+				give 1 book named "Recipes" to player
+		if arg 1 is "lg" or "logout":
+			set variable {logout.%player%.pvez} to location of player
+			wait 1 tick
+			give 9216 block 36 to player
+			loop items in player's inventory:
+				add loop-item to {lgpvezinv.%player%::*}
+			set {lgpvezinv.%player%::h} to player's helmet
+			set {lgpvezinv.%player%::c} to player's chestplate
+			set {lgpvezinv.%player%::l} to player's leggings
+			set {lgpvezinv.%player%::b} to player's boots
+			clear player's inventory
+			teleport player to {lobby.pvez}
+		
+		if arg 1 is "t" or "top":
+			message "&cSrry bb not working atm&9 ~Keelan"
+		if arg 1 is "menu" or "recipes":
+			run player command "/pvegui-1" as op
+		if arg 1 is "list":
+			message "&e//---------------[&2Player List&e]---------------\\"
+			loop {pvez.playerlist::*}:
+				message "&bPlayers: &3%loop-value%"
+		if arg 1 is "in" or "info" or "a" or "about":
+			message "&cPvE Version Alpha &60.9.6"
+			message "&cMore Features Coming Soon..."
+			message "&cDeveloped By &9Keelan"
+		if arg 1 is "st" or "start":
+			if {spawn.pvez} is not set:
+				message "&cSpawn Point is not set!&e&l:&9&l("
+				wait 4 ticks
+				message "&aPlease set Spawn Point!"
+				stop
+			else:
+				teleport player to {spawn.pvez}
+				message "&cYou have teleported to PvE Map Have Fun"
+				set {pvez.%player%.join} to 1
+				wait 1 tick
+				set {_currentlocation} to location of player
+				wait 1 tick
+				set {_relative.x} to rounded down the x coord of {spawn.pvez}
+				wait 1 tick
+				set {_random.x} to a random integer between 0 and 210
+				wait 1 tick
+				set {_relative.y} to rounded down the y coord of {spawn.pvez}
+				wait 1 tick
+				set {_random.y} to 80
+				wait 1 tick
+				set {_relative.z} to rounded down the z coord of {spawn.pvez}
+				wait 1 tick
+				set {_random.z} to a random integer between 0 and 260
+				wait 1 tick
+				set {_destinationx} to the block {_random.x} west of the block at {spawn.pvez}
+				wait 1 tick
+				set {_destinationy} to the block {_random.z} north of the block at {_destinationx}
+				wait 1 tick
+				set {_destination} to the block 10 below the block at {_destinationy}
+				wait 1 tick
+				set {god.mz.%player%} to 1
+				loop blocks above {_destination}:
+					loop-block is air:
+						set {_num} to loop-block
+						teleport player above {_num}
+					set {_num} to loop-block
+				apply Blindness 1 to the entity for 3 seconds 
+				apply Invisibility 1 to the entity for 15 seconds
+				apply Swiftness 1 to the entity for 25 seconds
+				apply Nausea 3 to the entity for 10 seconds
+				apply Regeneration 1 to the entity for 30 seconds
+				apply Absorption 1 to the entity for 10 seconds
+				set {_destination} to {spawn.pvez}
+				wait 5 seconds
+				set {god.mz.%player%} to 0
+				stop
+# -----------------------------------------
+# Chest Commands GUI
+# ------------------------------------ 	-			
+
+command /pvegui-1 [<player>] [<text>]:
+	description: GUI For PvE
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		open chest with 1 row named "&9&l&NPvE &4&l&nRecipes" to player
+		wait 3 ticks
+		format slot 0 of player with Red Stained Glass Pane named " " to be unstealable
+		format slot 1 of player with Iron Axe named "&2&lTools" with lore "&CRight Click to Open Tools GUI" to close then run "pvegui-2-c %player%"
+		format slot 2 of player with Crafting Table named "&e&lStructures" with lore "&CRight Click to build Structures" to be unstealable
+		format slot 3 of player with Leather Tunic named "&c&lArmour" with lore "&CRight Click to Craft Armour!" to close then run "pvegui-3-c %player%"
+		format slot 4 of player with Brick named "&4&lExplosives" with lore "&CRight Click to Retreive Explosives." to close then run "pvegui-4-c %player%"
+		format slot 5 of player with Stone Hoe named "&9&lGuns" with lore "&CComing Soon..." to be unstealable
+		format slot 6 of player with Gunpowder named "&1&lAmmo " with lore "&CRight Click to get Ammunition" to be unstealable
+		format slot 7 of player with Paper named "&6&lHealing" with lore "&CClick to Craft Bandages and more." to be unstealable
+		format slot 8 of player with Red Stained Glass Pane named " " to be unstealable
+
+command /pvegui-2 [<player>]:
+	description: GUI For PvE - Tools
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		open chest with 5 rows named "&2&lTools" to player
+		wait 3 ticks
+		format slot 0 of player with Red Stained Glass Pane named "&c&lReturn To Menu" with lore "&9 - Right Click" to close then run "pvegui-1-c %player%"
+		format slot 1 of player with Torch named "&9Flashlight" with lore "&c - Requirements||&c2 Stick||&c2 Iron Ingots||&c1 Coal||&c1 Redstone" to close then run "pvegui-flashlight-c %player%"
+		format slot 2 of player with Yellow dye named "&9Explosive Cupcake" with lore "&c - Requirements||&c2 Wheat||&c1 Sugar||&c1 Gunpowder" to close then run "pvegui-cupcake-c %player%"
+		format slot 9 of player with Wood named "&9Wooden Tools" to be unstealable
+		format slot 10 of player with Wooden Axe named "&9Wooden Axe" with lore "&c - Requirements||&c8 Wood||&c10 Sticks" to close then run "pvegui-woodenaxe-c %player%"
+		format slot 11 of player with Wooden Pickaxe named "&9Wooden Pickaxe" with lore "&C - Requirements||&c9 Wood||&C8 Sticks" to close then run "pvegui-woodenpickaxe-c %player%"
+		format slot 12 of player with Wooden Shovel named "&9Wooden Shovel" with lore "&c - Requirements||&c5 Wood||&c6 Sticks" to close then run "pvegui-woodenshovel-c %player%"
+		format slot 18 of player with Stone named "&9Stone Tools" to be unstealable
+		format slot 19 of player with Stone Axe named "&9Stone Axe" with lore "&c - Requirements||&c8 Stone||&c10 Sticks" to close then run "pvegui-stoneaxe-c %player%"
+		format slot 20 of player with Stone Pickaxe named "&9Stone Pickaxe" with lore "&C - Requirements||&C9 Stone||&C8 Sticks" to close then run "pvegui-stonepickaxe-c %player%"
+		format slot 21 of player with Stone Shovel named "&9Stone Shovel" with lore "&c - Requirements||&c6 Stone||&C6 Sticks" to close then run "pvegui-stoneshovel-c %player%"
+		format slot 27 of player with Iron Block named "&9Iron Tools" to be unstealable
+		format slot 28 of player with Iron Axe named "&9Iron Axe" with lore "&c - Requirements||&c8 Iron||&c10 Sticks" to close then run "pvegui-ironaxe-c %player%"
+		format slot 29 of player with Iron Pickaxe named "&9Iron Pickaxe" with lore "&c - Requirements||&c9 Iron||&c8 Sticks" to close then run "pvegui-ironpickaxe-c %player%"
+		format slot 30 of player with Iron Shovel named "&9Iron Shovel" with lore "&c - Requirements||&c6 Iron||&C6 Sticks" to close then run "pvegui-ironshovel-c %player%"
+		format slot 36 of player with Diamond Block named "&9Diamond Tools" to be unstealable
+		format slot 37 of player with Diamond Axe named "&9Diamond Axe" with lore "&c - Requirements||&c8 Diamonds||&c10 Sticks" to close then run "pvegui-diamondaxe-c %player%"
+		format slot 38 of player with Diamond Pickaxe named "&9Diamond Pickaxe" with lore "&c - Requirements||&c9 Diamonds||&c8 Sticks" to close then run "pvegui-diamondpickaxe-c %player%"
+		format slot 39 of player with Diamond Shovel named "&9Diamond Shovel" with lore "&c - Requirements||&c6 Diamonds||&C6 Sticks" to close then run "pvegui-diamondshovel-c %player%"
+command /pvegui-3 [<player>]:
+	description: GUI For PvE - Armour
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		open chest with 5 rows named "&c&lArmour" to player
+		wait 3 ticks
+		format slot 0 of player with Red Stained Glass Pane named "&c&lReturn to Menu" with lore "&9 - Right Click" to close then run "pvegui-1-c %player%"
+		format slot 9 of player with Leather named "&9Leather Armour" to be unstealable
+		format slot 10 of player with Leather helmet named "&9Leather Helmet" with lore "&c - Requirements||&C7 Leather||&c1 String" to close then run "pvegui-leatherhelmet-c %player%"
+		format slot 11 of player with Leather Tunic named "&9Leather Tunic" with lore "&c - Requirements||&c10 Leather||&c2 String" to close then run "pvegui-leathertunic-c %player%"
+		format slot 12 of player with Leather Leggings named "&9Leather Leggings" with lore "&c - Requirements||&c8 Leather||&c2 String" to close then run "pvegui-leatherlegging-c %player%"
+		format slot 13 of player with Leather Boots named "&9Leather Boots" with lore "&c - Requirements||&c6 Leather||&C1 String" to close then run "pvegui-leatherboots-c %player%"
+		format slot 18 of player with Iron Bar named "&9Chain Armour" to be unstealable
+		format slot 19 of player with Chain helmet named "&9Chain Helmet" with lore "&c - Requirements||&C7 Chain" to close then run "pvegui-chainhelmet-c %player%"
+		format slot 20 of player with Chain Chestplate named "&9Chain Chestplate" with lore "&c - Requirements||&c10 Chain" to close then run "pvegui-chainchestplate-c %player%"
+		format slot 21 of player with Chain Leggings named "&9Chain Leggings" with lore "&c - Requirements||&c8 Chain" to close then run "pvegui-chainlegging-c %player%"
+		format slot 22 of player with Chain Boots named "&9Chain Boots" with lore "&c - Requirements||&c6 Chain" to close then run "pvegui-chainboots-c %player%"
+		format slot 27 of player with Gold Block named "&9Gold Armour" to be unstealable
+		format slot 28 of player with Gold helmet named "&9Gold Helmet" with lore "&c - Requirements||&C7 Gold" to close then run "pvegui-goldhelmet-c %player%"
+		format slot 29 of player with Gold Chestplate named "&9Gold Chestplate" with lore "&c - Requirements||&c10 Gold" to close then run "pvegui-goldchestplate-c %player%"
+		format slot 30 of player with Gold Leggings named "&9Gold Leggings" with lore "&c - Requirements||&c8 Gold" to close then run "pvegui-goldlegging-c %player%"
+		format slot 31 of player with Gold Boots named "&9Gold Boots" with lore "&c - Requirements||&c6 Gold" to close then run "pvegui-goldboots-c %player%"
+		format slot 36 of player with Iron Block named "&9Iron Armour" to be unstealable
+		format slot 37 of player with Iron helmet named "&9Iron Helmet" with lore "&c - Requirements||&C7 Iron" to close then run "pvegui-ironhelmet-c %player%"
+		format slot 38 of player with Iron Chestplate named "&9Iron Chestplate" with lore "&c - Requirements||&c10 Iron" to close then run "pvegui-ironchestplate-c %player%"
+		format slot 39 of player with Iron Leggings named "&9Iron Leggings" with lore "&c - Requirements||&c8 Iron" to close then run "pvegui-ironlegging-c %player%"
+		format slot 40 of player with Iron Boots named "&9Iron Boots" with lore "&c - Requirements||&c6 Iron" to close then run "pvegui-ironboots-c %player%"
+command /pvegui-4 [<player>]:
+	description: Keeland
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		open chest with 1 rows named "&c&lExplosives" to player
+		wait 3 ticks
+		format slot 0 of player with Red Stained Glass Pane named "&c&lReturn to Menu" with lore "&9 - Right Click" to close then run "pvegui-1-c %player%"
+		format slot 1 of player with Brick named "&9Jihad Bomb" with lore "&c - Requirements||&C7 Gunpowder||&c1 String||&C3 Stone||&C1 Iron" to close then run "pvegui-jihad-c %player%"
+		format slot 2 of player with Yellow dye named "&9Explosive Cupcake" with lore "&c - Requirements||&c2 Wheat||&c1 Sugar||&c1 Gunpowder" to close then run "pvegui-cupcake-c %player%"				
+on rightclick holding book:
+	if the player is holding a book named "Recipes":
+		run player command "/pvegui-1" as op
+command /pvegui-flashlight [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		player has 2 Redstone and 1 Coal and 2 Iron Ingots and 2 Stick:
+			wait 3 ticks
+			remove 1 Coal from player
+			remove 2 redstone from player
+			remove 2 Iron Ingots from player
+			remove 2 stick from player
+			wait 4 ticks
+			execute console command "shot give %player% FLASHLIGHT"
+		else:
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-cupcake [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		player has 2 Wheat and 1 Sugar and 1 Gunpowder:
+			wait 3 ticks
+			remove 1 Sugar from player
+			remove 2 Wheat from player
+			remove 1 Gunpowder from player
+			wait 4 ticks
+			execute console command "shot give %player% CUPCAKE"
+		else:
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-jihad [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		player has 7 Gunpowder and 1 String and 3 Stone and 1 Iron Ingot:
+			wait 3 ticks
+			remove 7 Gunpowder from player
+			remove 1 String from player
+			remove 3 Stone from player
+			remove 1 Iron Ingot from player
+			wait 4 ticks
+			execute console command "shot give %player% JIHAD"
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-woodenaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		player has 8 Plank and 10 Stick:
+			wait 3 ticks
+			remove 8 Plank from player
+			remove 10 Stick from player
+			wait 2 ticks
+			give 1 Wooden Axe to player
+		else:
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-woodenpickaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 4 ticks
+		player has 9 Plank and 8 Stick:
+			wait 3 ticks
+			remove 9 Plank from player
+			remove 8 Stick from player
+			wait 1 tick
+			give 1 Wooden Pickaxe to player
+		else:
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-woodenshovel [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 5 Plank and 6 Stick:
+			wait 3 ticks
+			remove 5 Plank from player
+			remove 6 stick from player
+			set {_wshovel} to a wooden shovel
+			set durability of {_wshovel} to a random integer between 5 and 50
+			wait 1 tick
+			give {_wshovel} to player
+		else:
+			wait 1 tick
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-stoneaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Cobblestone and 10 Stick:
+			wait 1 tick
+			remove 8 Cobblestone from player
+			remove 10 Stick from player
+			wait 1 tick
+			give 1 Stone Axe to player
+		else:
+			wait 1 tick
+			message "{@MZ-Logo} &6Not Enough Materials"
+			
+command /pvegui-stonepickaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 9 Cobblestone and 8 Stick:
+			wait 1 tick
+			remove 9 Cobblestone from player
+			remove 8 Stick from player
+			wait 1 tick
+			give 1 Stone Pickaxe to player
+		else:
+			wait 1 tick
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-stoneshovel [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Cobblestone and 6 Stick:
+			wait 1 tick
+			remove 6 Cobblestone from player
+			remove 6 Stick from player
+			wait 1 tick
+			set {_stoneshovel} to a stone shovel
+			set durability of {_stoneshovel} to a random integer between 3 and 70
+			wait 1 tick
+			give {_stoneshovel} to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Iron Ingots and 10 Stick:
+			wait 1 tick
+			remove 8 Iron Ingots from player
+			remove 10 Stick from player
+			wait 1 tick
+			set {_ironaxe} to a iron axe
+			set durability of {_ironaxe} to a random integer between 0 and 30
+			wait 1 tick
+			give {_ironaxe} to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironpickaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 9 Iron Ingots and 8 Stick:
+			wait 1 tick
+			remove 9 Iron Ingots from player
+			remove 8 Stick from player
+			wait 1 tick
+			give 1 Iron Pickaxe to player
+		else:
+			wait 1 tick
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironshovel [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Iron Ingots and 6 Stick:
+			wait 1 tick
+			remove 6 Iron Ingots from player
+			remove 6 Stick from player
+			wait 2 ticks
+			set {_ironshovel} to a iron shovel
+			set durability of {_ironaxe} to a random integer between 0 and 50
+			wait 1 tick
+			give {_ironshovel} to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-diamondaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Diamond and 10 Stick:
+			wait 1 tick
+			remove 8 Diamond from player
+			remove 10 Stick from player
+			wait 1 tick
+			set {_diamondaxe} to a diamond axe
+			set durability of {_diamondaxe} to a random integer between 0 and 39
+			wait 1 tick
+			give {_diamondaxe} to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-diamondpickaxe [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 9 Diamond and 8 Stick:
+			wait 1 tick
+			remove 9 Diamond from player
+			remove 8 Stick from player
+			wait 1 tick
+			give 1 Diamond Pickaxe to player
+		else:
+			wait 1 tick
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-diamondshovel [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Diamond and 6 Stick:
+			wait 1 tick
+			remove 6 Diamond from player
+			remove 6 Stick from player
+			wait 2 ticks
+			set {_diamondshovel} to a iron shovel
+			set durability of {_dimondshovel} to a random integer between 0 and 59
+			wait 1 tick
+			give {_diamondshovel} to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-leatherhelmet [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 7 Leather and 1 String:
+			wait 2 ticks
+			remove 7 Leather from player
+			remove 1 String from player
+			wait 1 tick
+			give 1 Leather Helmet to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-leathertunic [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 10 Leather and 2 String:
+			wait 1 tick
+			remove 10 Leather from player
+			remove 2 String from player
+			wait 1 tick
+			give 1 Leather Tunic to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-leatherlegging [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Leather and 2 String:
+			wait 1 tick
+			remove 8 Leather from player
+			remove 2 String from player
+			wait 1 tick
+			give 1 Leather Leggings to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-leatherboots [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Leather and 1 String:
+			wait 2 ticks
+			remove 6 Leather from player
+			remove 1 String from player
+			wait 1 tick
+			give 1 Leather Boots to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-chainhelmet [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 7 Iron Bar:
+			wait 2 ticks
+			remove 7 Iron Bar from player
+			wait 1 tick
+			give 1 Chain Helmet to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-chainchestplate [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 10 Iron Bar:
+			wait 1 tick
+			remove 10 Iron Bar from player
+			wait 1 tick
+			give 1 Chain Chestplate to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-chainlegging [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Iron Bar:
+			wait 1 tick
+			remove 8 Iron Bar from player
+			wait 1 tick
+			give 1 Chain Leggings to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-chainboots [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Iron Bar:
+			wait 2 ticks
+			remove 6 Iron Bar from player
+			wait 1 tick
+			give 1 Chain Boots to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-goldhelmet [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 7 Gold Ingot:
+			wait 2 ticks
+			remove 7 Gold Ingot from player
+			wait 1 tick
+			give 1 Gold helmet to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-goldchestplate [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 10 Gold Ingot:
+			wait 1 tick
+			remove 10 Gold Ingot from player
+			wait 1 tick
+			give 1 Gold Chestplate to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-goldlegging [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Gold Ingot:
+			wait 1 tick
+			remove 8 Gold Ingot from player
+			wait 1 tick
+			give 1 Gold leggings to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-goldboots [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Gold Ingot:
+			wait 2 ticks
+			remove 6 Gold Ingot from player
+			wait 1 tick
+			give 1 Gold Boots to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironhelmet [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 7 Iron Ingot:
+			wait 2 ticks
+			remove 7 Iron Ingot from player
+			wait 1 tick
+			give 1 Iron helmet to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironchestplate [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 10 Iron Ingot:
+			wait 1 tick
+			remove 10 Iron Ingot from player
+			wait 1 tick
+			give 1 Iron Chestplate to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironlegging [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 8 Iron Ingot:
+			wait 1 tick
+			remove 8 Iron Ingot from player
+			wait 1 tick
+			give 1 Iron leggings to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-ironboots [<player>] [<text>]:
+	executable by: console and players
+	trigger:
+		wait 3 ticks
+		player has 6 Iron Ingot:
+			wait 2 ticks
+			remove 6 Iron Ingot from player
+			wait 1 tick
+			give 1 Iron Boots to player
+		else:
+			wait 2 ticks
+			message "{@MZ-Logo} &6Not Enough Materials"
+command /pvegui-4-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-4"
+command /pvegui-3-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-3"
+command /pvegui-2-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-2"
+command /pvegui-1-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-1"
+command /pvegui-flashlight-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-flashlight"
+command /pvegui-cupcake-c [<player>] [<text>]:
+	executable by: console
+	description: Console Run Cupcake Command
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-cupcake"
+command /pvegui-jihad-c [<player>] [<text>]:
+	executable by: console
+	description: Console Run Jihad Command
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-jihad"
+command /pvegui-woodenaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-woodenaxe"
+command /pvegui-woodenpickaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-woodenpickaxe"
+command /pvegui-woodenshovel-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-woodenshovel"
+command /pvegui-stoneaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-stonaxe"
+command /pvegui-stonepickaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-stonepickaxe"
+command /pvegui-stoneshovel-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-stoneshovel"
+command /pvegui-ironaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironaxe"
+command /pvegui-ironpickaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironpickaxe"
+command /pvegui-ironshovel-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironshovel"
+command /pvegui-diamondaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-diamondaxe"
+command /pvegui-diamondpickaxe-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-diamondpickaxe"
+command /pvegui-diamondshovel-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-diamondshovel"
+command /pvegui-leatherhelmet-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-leatherhelmet"
+command /pvegui-leathertunic-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-leathertunic"
+command /pvegui-leatherlegging-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-leatherlegging"
+command /pvegui-leatherboots-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-leatherboots"
+command /pvegui-chainhelmet-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-chainhelmet"
+command /pvegui-chainchestplate-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-chainchestplate"
+command /pvegui-chainlegging-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-chainlegging"
+command /pvegui-chainboots-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-chainboots"
+command /pvegui-goldhelmet-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-goldhelmet"
+command /pvegui-goldchestplate-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-goldchestplate"
+command /pvegui-goldlegging-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-goldlegging"
+command /pvegui-goldboots-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-goldboots"
+command /pvegui-ironhelmet-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironhelmet"
+command /pvegui-ironchestplate-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironchestplate"
+command /pvegui-ironlegging-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironlegging"
+command /pvegui-ironboots-c [<player>] [<text>]:
+	executable by: console
+	trigger:
+		wait 3 ticks
+		make the player-arg execute command "pvegui-ironboots"
+command /pvesign reset:
+	executable by: players and console
+	trigger:
+		set {mz.joined.total} to 0
+		set line 3 of block at {mz.signlocation} to "%{mz.joined.total}%/36"
+		
+

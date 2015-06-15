@@ -1,0 +1,123 @@
+options:
+	world: PvE 
+	cave-spider-near-message: &c&oHsssst!
+	zombiespeedlevel: 3 # a number 1 - 20
+	zombieslownessdeathlevel: 2 # effect level
+	zombieslownessdeathseconds: 60 # amount of time in seconds
+
+on script load:
+	set {zombdeath} to false
+	set {admobs} to false
+	stop
+on target:
+	event-world is "{@world}" #i like to add a option for world in case i add alot of stuff to one script.
+	if {admobs} is true: 
+		if target is sneaking:
+			if entity's target is a player:
+				entity is zombie or skeleton or spider or cave spider
+				distance between target and event-entity > 3
+				cancel the event
+			else:
+				entity is zombie or skeleton or spider or cave spider
+				distance between target entity and event-entity < 3
+				wait 6 ticks
+				play raw sound "mob.bat.death" at player with pitch 1 volume 15
+				wait 3 ticks
+				if entity is a zombie:
+					apply speed {@zombiespeedlevel} to entity for {zombiespeedseconds}
+				else:
+					stop
+		else:
+			if entity's target is a player:
+				entity is cave spider
+				distance between target and event-entity < 6
+				wait 4 ticks
+				send "{@cave-spider-near-message}" to player
+	else:
+		stop
+on death of player:
+	event-world is "{@world}"
+	if {zombdeath} is true:
+		loop all items in player's inventory:
+			add the loop-item to {inv.&c%name of victim%'s_Zombie::*}
+		add 1 of victim's skull to {inv.&c%name of victim%'s_Zombie::*}
+		add 1 of victim's helmet to {inv.&c%name of victim%'s_Zombie::*}
+		add 1 of victim's chestplate to {inv.&c%name of victim%'s_Zombie::*}
+		add 1 of victim's leggings to {inv.&c%name of victim%'s_Zombie::*}
+		add 1 of victim's boots to {inv.&c%name of victim%'s_Zombie::*}
+		spawn a zombie at location of victim
+		set the name of the spawned zombie to "&c%name of victim%'s &2Zombie"
+		set tool of the spawned zombie to victim's tool
+		set helmet of the spawned zombie to victim's skull
+		set chestplate of the spawned zombie to victim's chestplate
+		set leggings of the spawned zombie to victim's leggings
+		set boots of the spawned zombie to victim's boots
+		clear drops
+		apply slowness {@zombieslownessdeathlevel} to spawned zombie for {@zombieslownessdeathseconds} seconds
+		stop
+	else:
+		stop
+
+on death:
+	if {zombdeath} is true:
+		victim is zombie:
+			clear drops
+			loop {inv.%display name of victim%::*}:
+				drop loop-value at the victim
+			clear {inv.%display name of victim%::*}
+			stop
+	else:
+		stop
+#--------------------------------------------
+#           Command
+#---------------------------------------------
+
+command /xmobs [<text=help>] [<time span=5 seconds>]:
+	executable by: console and players
+	description: xmobs by Keeland
+	permission: xmobs.ad
+	permission message: <red>No permission :( <reset>
+	trigger:
+		if arg 1 is "help":
+			wait 1 tick
+			message "&6&m-=--------------------[&e&LX-Mobs&6&m]--------------------=-"
+			message "&6/xmobs enable &a- Enable the Script"
+			message "&6/xmobs disable &a- Disable the Script"
+			message "&6/xmobs zombiespeedsecs &A- Set Speed Seconds for zombies"
+			message "&6/xmobs zombieondeath &A- Enables/Disables Zombie on death"
+			message "&6/xmobs info &A- Information about Script"
+		if arg 1 is "zombieondeath" or "zombondeath" or "zombdeath" or "zd" or "zod":
+			if {zombdeath} is true:
+				set {zombdeath} to false
+				wait 3 ticks
+				send "&cDisabled Zombie on Death" to player
+				stop
+			if {zombdeath} is false:
+				set {zombdeath} to true
+				wait 3 ticks
+				send "&aEnabled Zombie on Death" to player
+				stop
+		if arg 1 is "e" or "enable":
+			wait 1 tick
+			message "&aX-Mobs Enabled!"
+			wait 3 ticks
+			set {admobs} to true
+		if arg 1 is "d" or "disable":
+			wait 1 tick
+			message "&aX-Mobs Disabled!"
+			wait 3 ticks
+			set {admobs} to false
+		if arg 1 is "zombiespeedsecs" or "zombiespeed" or "zss":
+			if arg 2 is set:
+				set {zombiespeedseconds} to "%arg 2% seconds" parsed as a time span
+				wait 15 ticks
+				send "&6Set to {zombiespeedseconds}" to player
+				stop
+			if arg 2 is not set:
+				send "&6Please set a time in seconds" to player
+				stop
+		if arg 1 is "info" or "i" or "a" or "about":
+			message "&6-&E&LX-Mobs&^- &6A script by &eKeelan"
+			message "&6Contact me via Skype for a script or to report a Bug"
+			message "&6Skype > live:houselessofficial"
+			stop

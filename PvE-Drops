@@ -1,0 +1,122 @@
+-------------------------------------------
+#          PvE Drops
+#-------------------------------------------
+
+# OPTIONS
+#
+
+options:
+	world: PvE
+
+	dismessage: &cDisabled PvE Breaks
+
+	hurtmessage: &cOw My Hands!
+
+#--------------------------------------------
+#         Actual Script
+#--------------------------------------------
+
+on break of any wood:
+	event-world is "{@world}"
+	player's gamemode is survival or adventure
+	player has permission "pve.drops":
+		cancel event
+		set event-block to air
+		wait 1 tick
+		drop plank:0 named "&7[&cWood&7]"
+		drop stick named "&7[&cStick&7]"
+		wait 60 seconds
+		set event-block to wood:0
+	else:
+		message "{@dismessage}"
+on break of leaves:
+	event-world is "{@world}"
+	player's gamemode is survival or adventure
+	player has permission "pve.drops":
+		cancel event
+	else:
+		cancel event
+		message "{@dismessage}"
+on break of iron ore:
+	event-world is "{@world}" # Cus that matters... like all the time :(
+	player's tool is any pickaxe
+	player's gamemode is survival or adventure
+	player has permission "pve.drops":
+		cancel event
+		spawn 10 of particle smoke at player to player
+		set event-block to air
+		chance of 60%:
+			drop 1 iron ingot named "&f[&7Iron&f]"
+		chance of 30%:
+			drop 1 Cobblestone named "&f[&7Stone&f]" #Should probably add more chances later.. eh, later
+		wait 180 seconds
+		set event-block to iron ore
+		spawn 100 of particle smoke at player to player
+	else:
+		message "{@dismessage}" # Remember quotes also in the options
+on break of gold ore:
+	event-world is "{@world}"
+	player's tool is any pickaxe
+	player's gamemode is survival or adventure
+	player has permission "pve.drops":
+		cancel event
+		spawn 10 of particle smoke at player to player
+		set event-block to air
+		chance of 60%:
+			drop 1 gold ingot named "&f[&6Goldf]"
+		chance of 30%:
+			drop 1 Cobblestone named "&f[&7Stone&f]" #Should probably add more chances later.. eh, later
+		wait 120 seconds
+		set event-block to gold ore
+		spawn 100 of particle smoke at player to player
+	else:
+		message "{@dismessage}"
+on break of Cobblestone:
+	event-world is "{@world}"
+	player's tool is any pickaxe:
+		player's gamemode is survival or adventure
+		player has permission "pve.drops":
+			cancel event
+			spawn 10 of particle smoke at player to player
+			set event-block to air
+			chance of 90%:
+				drop 1 Cobblestone named "&f[&7Stone&f]" #Should probably add more chances later.. eh, later
+			chance of 5%:
+				drop 1 Bar named "&f[&7Chain&f]"
+			damage the player's tool by 4
+			wait 120 seconds
+			set event-block to cobblestone
+			spawn 100 of particle smoke at player to player
+		else:
+			message "{@dismessage}"
+	else:
+		message "{@hurtmessage}"
+on break of Stone:
+	event-world is "{@world}"
+	player's tool is any pickaxe:
+		player's gamemode is survival or adventure
+		player has permission "pve.drops":
+			cancel event
+			spawn 10 of particle smoke at player to player
+			set event-block to air
+			chance of 95%:
+				drop 1 Cobblestone named "&f[&7Stone&f]" #Should probably add more chances later.. eh, later
+			chance of 10%:
+				drop 1 Bar named "&f[&7Chain&f]"
+			damage the player's tool by 6
+			wait 120 seconds
+			set event-block to cobblestone
+			spawn 100 of particle smoke at player to player
+		else:
+			message "{@dismessage}"
+	else:
+		message "{@hurtmessage}"
+on xp spawn:
+	world is "{@world}"
+	cancel event
+on craft:
+	world is "{@world}"
+	cancel event
+on leaves decay:
+	world is "{@world}"
+	cancel event

@@ -1,0 +1,135 @@
+options:
+	PVE-Logo: &7[&9PvE&7] <reset>
+
+variables:
+	{cpve::9} = "Potion of Regeneration"
+	{cpve::8} = "Potion of Swiftness"
+	{cpve::7} = "Potion of Healing"
+	{cpve::6} = "Potion of Healing"
+	{cpve::5} = "Potion of Healing"
+	{cpve::4} = "Potion of Strength"
+	{cpve::3} = "Potion of Strength"
+	{cpve::2} = "2 Apple"
+	{cpve::1} = "Baked Potato"
+	{cpve::29} = "Carrot"
+	{cpve::28} = "Cooked Chicken"
+	{cpve::27} = "Steak"
+	{cpve::26} = "Flint and Steel"
+	{cpve::25} = "3 GoldIngot"
+	{cpve::24} = "Compass"
+	{cpve::23} = "3 Arrow"
+	{cpve::22} = "IronIngot"
+	{cpve::21} = "2 diamond"
+	{cpve::19} = "shears"
+	{cpve::18} = "Leather Pants"
+	{cpve::17} = "gold ingot"
+	{cpve::16} = "iron ingot"
+	{cpve::15} = "Gold Ingot"
+	{cpve::14} = "2 Iron Ingot"
+	{cpve::13} = "3 Iron Ingot"
+	{cpve::12} = "emerald"
+	{cpve::11} = "5 Stick"
+	{cpve::20} = "Stick"
+	{cpve::10} = "2 Arrow"
+	{cpve::63} = "Diamond Axe"
+	{cpve::62} = "Glowstone"
+	{cpve::61} = "Diamond Hoe"
+	{cpve::60} = "Wheat"
+	{cpve::59} = "Arrow"
+	{cpve::58} = "LeatherBoots"
+	{cpve::57} = "LeatherChestplate"
+	{cpve::56} = "Leather Chestplate"
+	{cpve::55} = "Leather Boots"
+	{cpve::54} = "Leather Leggings"
+	{cpve::53} = "Leather Boots"
+	{cpve::52} = "Leather Cap"
+	{cpve::51} = "LeatherCap"	
+	{fpve::2} = "2 Apple"
+	{fpve::1} = "Baked Potato"
+	{fpve::3} = "Carrot"
+	{fpve::4} = "Cooked Chicken"
+	{fpve::5} = "Steak"
+	{fpve::6} = "Mushroom Stew"
+	{fpve::7} = "3 Raw Porkchop"
+	{fpve::8} = "Cooked Porkchop"
+	{fpve::9} = "Cooked Fish"
+	{fpve::10} = "Baked Potato"
+	{fpve::11} = "Cooked Rabbit"
+
+on rightclick on chest:
+	if player is in world "PvE":
+		cancel event
+		chance of 20%:
+			set {_item} to "%{cpve::%random integer between 1 and 29%}%"
+			give {_item} parsed as itemtype to the player
+		chance of 20%:
+			set {_mzarmorL} to Leather Chestplate, Leather Boots, Leather helmet or Leather Leggings
+			set durability of {_mzarmorL} to random integer between 45 and 56
+			give {_mzarmorL} to the player
+		chance of 10%:
+			set {_mzarmorC} to Chain Chestplate, Chain Boots, Chain helmet, or Chain Leggings 
+			set durability of {_mzarmorC} to random integer between 100 and 159
+			give {_mzarmorC} to the player
+		chance of 15%:
+			give ender pearl named "Grenade" to the player
+		chance of 10%:
+			give paper named "Bandage" to the player
+		chance of 5%:
+			give red dye named "Ointment" to the player
+		chance of 5%:
+			give light green dye named "Curing shit" to the player
+		chance of 5%:
+			give milk bucket named "Vaccine" to the player
+		chance of 30%:
+			set {_pveW} to  wood sword or wood axe
+			set durability of {_pveW} to random integer between 35 and 59
+			give {_pveW} to the player
+		chance of 15%:
+			set {_pveS} to stone sword or stone axe 
+			set durability of {_pveS} to random integer between 75 and 129
+			give {_pveS} to the player
+		chance of 10%:
+			set {_pveI} to Bow or iron sword
+			set durability of {_pveI} to random integer between 145 and 249
+			give {_pveI} to the player
+		else:
+			chance of 70%:
+				set {_mzarmorL} to Leather Chestplate, Leather Boots, Leather helmet or Leather Leggings
+				set durability of {_mzarmorL} to random integer between 45 and 56
+				give {_mzarmorL} to the player
+			chance of 30%:
+				send "{@PVE-Logo}&2Looks like that chest is empty" to player
+			
+		clear inventory of clicked block
+		set clicked block to air
+		wait 180 seconds
+		set clicked block to chest
+		stop
+	else:
+		stop
+on rightclick on Burning Furnace:
+	player is in world "PvE":
+		chance of 20%:
+			set {_food} to "%{fpve::%random integer between 1 and 5%}%"
+			give {_food} parsed as itemtype to the player
+		chance of 40%:
+			set {_food2} to "%{fpve::%random integer between 1 and 5%}%"
+			give {_food2} parsed as itemtype to the player
+		else:
+			send "{@PVE-Logo}&2Looks like that furnace is empty" to player
+
+			
+		clear inventory of clicked block
+		set clicked block to Furnace
+		wait 180 seconds
+		set clicked block to Burning Furnace
+		stop
+	else:
+		stop
+		
+command /pvefood:
+	executable by: players and console
+	trigger:
+		loop blocks in radius 150 around player:
+			if loop-block is a Furnace:
+				set loop-block to Burning Furnace

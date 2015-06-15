@@ -121,7 +121,7 @@ on rightclick on Burning Furnace:
 			
 		clear inventory of clicked block
 		set clicked block to Furnace
-		wait 180 seconds
+		wait 360 seconds
 		set clicked block to Burning Furnace
 		stop
 	else:
@@ -133,3 +133,4 @@ command /pvefood:
 		loop blocks in radius 150 around player:
 			if loop-block is a Furnace:
 				set loop-block to Burning Furnace
+				stop

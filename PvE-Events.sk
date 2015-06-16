@@ -1,0 +1,149 @@
+options:
+	MZ-Logo: &7[&9PvE&7] <reset>
+	MZtool: wood hoe or stone shovel
+	MZbreak: diamond hoe
+	world: PvE
+
+variables:
+	{kpvez::9} = "Potion of Regeneration"
+	{kpvez::8} = "Potion of Swiftness"
+	{kpvez::7} = "Potion of Healing"
+	{kpvez::6} = "Potion of Healing"
+	{kpvez::5} = "Potion of Healing"
+	{kpvez::4} = "Potion of Strength"
+	{kpvez::3} = "Potion of Strength"
+	{kpvez::2} = "5 Arrow"
+	{kpvez::1} = "Bow"	
+on load:
+	add "pvez" to {scripts.list::*}
+on unload:
+	remove "pvez" from {scripts.list::*}
+
+on entity target:
+	entity is a zombie or skeleton
+	world is "{@world}"
+	chance of 75%:
+		apply speed 3 to the entity for 8 seconds
+	chance of 25%:
+		apply speed 2 to the entity for 12 seconds
+
+on damage of giant:
+	if attacker is a player:
+		set {aname} to name of attacker
+		while victim is alive:
+			if name of attacker is {aname}:
+				make victim pathfind to attacker with speed 0.8
+				wait 3 ticks
+			else:
+				exit loop
+
+on combust:
+	event-world is "{@world}"
+	event-entity is a zombie or skeleton
+	cancel event
+
+on death of zombie:	
+	add 1 to {kills.%attacker%}
+	set {_tempkill} to {kills.%attacker%}
+	{_diffkill} is more than {_tempkill}:
+		set {_diffkill} to {_diffkill} + 5
+		set {_item} to "%{kpvez::%random integer between 1 and 9%}%"
+		drop {_item} parsed as itemtype at victim
+		
+on death of player:
+	if {pvez.%player%.join} is 1:
+		delete {bitten.%victim%}
+		delete {pvez.%player%.join}
+		add 1 to {score.%attacker%}
+		teleport player to {lobby.pvez}
+		delete {score.%player%}
+		delete {kills.%player%}
+		delete {kills.%player%}
+	
+every 120 seconds:
+	loop all players:
+		set {_x} to x-coordinate of loop-player
+		set {_z} to z-coordinate of loop-player
+		set {_y} to y-coordinate of loop-player
+		loop {MZone.list::*}:
+			{_x} is between {MZone.%loop-index%::1x} and {MZone.%loop-index%::2x}
+			{_z} is between {MZone.%loop-index%::1z} and {MZone.%loop-index%::2z}
+			{_y} is between {MZone.%loop-index%::1y} and {MZone.%loop-index%::2y}
+			set {_radius} to 37
+			set {_chance} to 9
+			set {_py} to y-coordinate of {sk.dropparty}
+			loop blocks in radius {_radius} around {sk.dropparty}:
+				loop-block is air:
+					chance of {_chance}%:
+						set {_location} to location of loop-block
+						set {_testy} to y-coordinate of {_location}
+						set {_diff} to {_testy}
+						subtract {_py} from {_diff}
+						{_diff} is less than 5:
+							{_diff} is more than -5:
+								chance of 2%:
+									spawn 3 zombie at {_location}
+								chance of 5%:
+									spawn 2 zombie at {_location}
+								chance of 5%:
+									spawn a zombie at {_location}
+on damage:
+	if {god.mz.%victim%} is 1:
+		damage cause is fall:
+			cancel event
+			stop
+			
+on place:
+	world is "PvE"
+	event-block is fire
+	wait 7 seconds
+	set event-block to air
+
+on xp spawn:
+	world is "PvE"
+	cancel event
+
+on place:
+	if player has permission "izone":
+		stop
+	player is in world "PvE"
+	set {_x} to x-coordinate of event-block
+	set {_z} to z-coordinate of event-block
+	set {_y} to y-coordinate of event-block
+	loop {MZone.list::*}:
+		{_x} is between {MZone.%loop-index%::1x} and {MZone.%loop-index%::2x}
+		{_z} is between {MZone.%loop-index%::1z} and {MZone.%loop-index%::2z}
+		{_y} is between {MZone.%loop-index%::1y} and {MZone.%loop-index%::2y}
+		cancel event
+		send "<red>{@MZ-Logo} Protected area."
+		exit loop
+on break:
+	if player has permission "izone":
+		stop
+	set {_x} to x-coordinate of event-block
+	set {_z} to z-coordinate of event-block
+	set {_y} to y-coordinate of event-block
+	loop {MZone.list::*}:
+		{_x} is between {MZone.%loop-index%::1x} and {MZone.%loop-index%::2x}
+		{_z} is between {MZone.%loop-index%::1z} and {MZone.%loop-index%::2z}
+		{_y} is between {MZone.%loop-index%::1y} and {MZone.%loop-index%::2y}
+		If Player Is Holding {@MZtool}:
+			If event-block Is  {@MZbreak}:
+				drop event-block at event-location
+				wait 60 seconds
+				set event-block to {@MZbreak} or Melon
+				stop
+			If event-block Is a Melon:
+				drop 3 Melon slice at event-location
+				wait 60 seconds
+				set event-block to {@MZbreak} or Melon
+				stop
+			else:
+				player is in world "PvE"
+				cancel event
+				send "<red>{@MZ-Logo} Protected area."
+				exit loop
+on death of player:
+	event-world is "PvE"
+	wait 10 seconds
+	run player command "/pvez leave" as op

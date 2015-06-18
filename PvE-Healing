@@ -1,0 +1,166 @@
+options:
+	world: "PvE"
+
+#----------------------------#
+#---Zombie ----- Bite------#
+#----------------------------#
+on damage of player:
+	set {_x} to x-coordinate of victim
+	set {_z} to z-coordinate of victim
+	set {_y} to y-coordinate of victim
+	loop {MZone.list::*}:
+		{_x} is between {MZone.%loop-index%::1x} and {MZone.%loop-index%::2x}
+		{_z} is between {MZone.%loop-index%::1z} and {MZone.%loop-index%::2z}
+		{_y} is between {MZone.%loop-index%::1y} and {MZone.%loop-index%::2y}
+		attacker is a zombie:
+			chance of 20%:
+				{bitten.%victim%} is not set:
+					set {bitten.%victim%} to true
+					message "&cI better find a vaccine..." to victim
+#----------------------------#
+#---Loop ------- Bitten------#
+#----------------------------#					
+every 20 seconds:
+	loop all players:
+		set {_x} to x-coordinate of loop-player
+		set {_z} to z-coordinate of loop-player
+		set {_y} to y-coordinate of loop-player
+		loop {MZone.list::*}:
+			{_x} is between {MZone.%loop-index%::1x} and {MZone.%loop-index%::2x}
+			{_z} is between {MZone.%loop-index%::1z} and {MZone.%loop-index%::2z}
+			{_y} is between {MZone.%loop-index%::1y} and {MZone.%loop-index%::2y}
+			exit loop
+			{bitten.%loop-player%} is true:
+				player is in world "PvE"
+				apply nausea 1 to loop-player for 10 seconds
+				apply poison 1 to loop-player for 5 seconds
+				damage loop-player by 1 heart
+				send "&7I don't feel so good..." to loop-player
+#--------------------------------------#
+#----Paper to heal self(Not others)----#
+#--------------------------------------#
+on rightclick holding paper:
+	if the player is holding a paper named "Bandage":
+		if {pvez.%player%.join} is 1:
+			if targeted block is a chest:
+				stop
+			heal the player by 3 hearts
+			set {pvez.%player%.bleeding} to false
+			remove slowness from player
+			remove nausea from player
+			remove blindness from player
+			message "&9You start to feel better..."
+			remove 1 paper from player
+			stop
+#----------------------------#
+#---Healing others - paper---#
+#----------------------------#
+on leftclick on air:
+	if the player is holding a paper named "Bandage":
+		if {pvez.%player%.join} is 1:
+			if {pvez.%player%.BandageCD} is set:
+				set {_waited} to difference between {pvez.%player%.BandageCD} and now
+				if {_waited} is less than 30 seconds:
+					set {_timeleft} to difference between 30 seconds and {_waited}
+					message "&9Your cooldown still has &a%{_timeleft}%"
+					stop
+					
+			if {bandage.started} is true:
+				message "&cYou've already begun healing %{PEntity}%"
+				stop
+			else:
+				set {bandage.started} to true
+				set {bandage.PEntity} to clicked entity
+				set {bandage.expire} to 0
+
+
+			send "&2You have begun healing &c%clicked player%" to player
+			send "&c%player% &2has begun healing you." to {PEntity}
+			set {bandage.regenTime} to 5 seconds
+
+			loop 5 times:
+				add 1 to {bandage.expire}
+				wait 1 second
+			if {bandage.expire} is 10:
+				send "&aYou've stopped healing &c%{PEntity}%" to player
+				send "&c%player% &ahas stopped healing you" to {PEntity}
+				set {bandage.started} to false
+				stop
+#---------------------------------#
+#---Red Dye boosting regen time---#
+#---------------------------------#
+on leftclick holding red dye:
+	if the player is holding a red dye named "Ointment":
+		if {pvez.%player%.join} is 1:
+			{bandage.started} is true
+			if {bandage.RDapplied} is false:
+				message "&6Applied healing ointment"
+				set {bandage.RDapplied} to true
+			else:
+				message "&cThe healing ointment is already applied!"
+				add 10 seconds to {bandage.regenTime}
+#----------------------------------#
+#----Lime Dye canceling debuffs----#
+#----------------------------------#
+on leftclick holding light green dye:
+	if the player is holding a light green dye named "Cure":
+		if {pvez.%player%.join} is 1:
+			{bandage.started} is true
+			if {bandage.LDapplied} is false:
+				message "&6Applied curing ointment"
+				set {bandage.LDapplied} to true
+			else:
+				message "&cThe curing ointment is already applied!"
+#--------------------------------------------------#
+#------Shears to finish the healing of others------#
+#--------------------------------------------------#
+on leftclick holding shears:
+	if {pvez.%player%.join} is 1:
+		{bandage.started} is true
+		if {bandage.cure} is true:
+			cure {bandage.PEntity}
+		send "&2You have healed &c%{PEntity}%" to player
+		send "&2You have been healed by &c%player%" to {PEntity}
+		apply regeneration to {bandage.PEntity} for {bandage.regenTime}
+		set {pvez.%player%.bleeding} to false
+		set {bandage.cure} to false
+		set {bandage.LDapplied} to false
+		set {bandage.RDapplied} to false
+		set {bandage.started} to false
+		set {pvez.%player%.BandageCD} to now
+		set {bandage.expire} to 0
+		remove slowness from player
+		remove nausea from player
+		remove blindness from player
+
+#--------------------------------#
+#---Doesnt damage when hitting---# 
+#------players to heal them------#
+#--------------------------------#    
+on damage of player:
+	if {pvez.%victim%.join} is true:
+		attacker is holding dye:
+			cancel event
+			stop
+		attacker is holding shears:
+			cancel event
+			stop
+		attacker is holding paper:
+			cancel event
+			stop
+		
+#--------------------------------------#
+#--Milk canceling debuffs(Not others)--#
+#--------------------------------------#
+on rightclick holding milk bucket:
+	if the player is holding a milk bucket named "Vaccine":
+		if {pvez.%player%.join} is 1:
+			if {bitten.%player%} is true:
+				wait 1 seconds
+				remove 1 milk bucket named "Vaccine" from player
+				remove poison from player
+				remove nausea from player
+				remove blindness from player
+				message "&cYou have been cured!"
+				delete {bitten.%player%}
+		

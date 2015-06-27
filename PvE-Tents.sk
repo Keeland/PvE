@@ -1,0 +1,29 @@
+On leftclick on crafting table:
+	event-world is "PvE"
+	player has permission "Tent.make":
+		set {tent.%player%.remove} to clicked block
+		set clicked block to chest
+		set block 2 blocks above clicked block to glowstone
+		loop blocks in radius 3 of clicked block:
+			loop-block is air
+			set loop-block to green wool
+		wait 1 tick
+		loop blocks in radius 2 of clicked block:
+			loop-block is wool
+			set loop-block to air
+		wait 1 tick
+	else:
+		message "No Perm"
+on leftclick on chest:
+	event-world is "PvE"
+	player has permission "Tent.make":
+		player is holding any axe
+		clicked block is {tent.%player%.remove}
+		loop blocks in radius 3 of clicked block:
+			loop-block is green wool
+			set loop-block to air
+		delete block 2 blocks above clicked block
+		delete clicked block
+		add 1 crafting table named "Portable Tent" to player
+	else:
+		message "No Perm"
